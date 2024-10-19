@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Recognition System</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        header {
+            background: #007bff;
+            color: #fff;
+            padding: 20px 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: auto;
+        }
+
+        h1, h2 {
+            margin-bottom: 20px;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        nav ul li {
+            display: inline;
+            margin: 0 10px;
+        }
+
+        nav ul li a {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        nav ul li a:hover {
+            text-decoration: underline;
+        }
+
+        section {
+            background: #fff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        form input {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        form button {
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        form button:hover {
+            background: #0056b3;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            background: #007bff;
+            color: white;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+
+        #topStudentsList ul {
+            list-style-type: none;
+        }
+
+        #topStudentsList li {
+            background: #f8f9fa;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Best-Performing Student Recognition System</h1>
+            <nav>
+                <ul>
+                    <li><a href="#addStudent">Add Student</a></li>
+                    <li><a href="#addAchievement">Add Achievement</a></li>
+                    <li><a href="#topStudents">Top Students</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <main class="container">
+        <section id="addStudent">
+            <h2>Add a New Student</h2>
+            <form id="addStudentForm">
+                <input type="text" id="studentName" placeholder="Student Name" required>
+                <input type="number" id="batchYear" placeholder="Batch Year" required>
+                <input type="text" id="department" placeholder="Department" required>
+                <input type="number" step="0.01" id="gpa" placeholder="GPA" required>
+                <button type="submit">Add Student</button>
+            </form>
+        </section>
+
+        <section id="addAchievement">
+            <h2>Add Achievement</h2>
+            <form id="addAchievementForm">
+                <input type="number" id="studentId" placeholder="Student ID" required>
+                <input type="text" id="category" placeholder="Category" required>
+                <input type="text" id="description" placeholder="Description" required>
+                <input type="text" id="level" placeholder="Level" required>
+                <input type="date" id="achievementDate" required>
+                <button type="submit">Add Achievement</button>
+            </form>
+        </section>
+
+        <section id="topStudents">
+            <h2>Top 3 Students</h2>
+            <button id="fetchTopStudents">Fetch Top 3 Students</button>
+            <div id="topStudentsList"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Student Recognition System. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Function to add a new student
+        document.getElementById('addStudentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const studentName = document.getElementById('studentName').value;
+            const batchYear = document.getElementById('batchYear').value;
+            const department = document.getElementById('department').value;
+            const gpa = document.getElementById('gpa').value;
+
+            const response = await fetch('/add_student', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name: studentName, batch_year: batchYear, department, gpa }),
+            });
+
+            const result = await response.json();
+            alert(result.message);
+            document.getElementById('addStudentForm').reset();
+        });
+
+        // Function to add a new achievement
+        document.getElementById('addAchievementForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const studentId = document.getElementById('studentId').value;
+            const category = document.getElementById('category').value;
+            const description = document.getElementById('description').value;
+            const level = document.getElementById('level').value;
+            const achievementDate = document.getElementById('achievementDate').value;
+
+            const response = await fetch('/add_achievement', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ student_id: studentId, category, description, level, achievement_date: achievementDate }),
+            });
+
+            const result = await response.json();
+            alert(result.message);
+            document.getElementById('addAchievementForm').reset();
+        });
+
+        // Function to fetch top 3 students
+        document.getElementById('fetchTopStudents').addEventListener('click', async () => {
+            const response = await fetch('/rank_students');
+            const result = await response.json();
+            const topStudentsList = document.getElementById('topStudentsList');
+            topStudentsList.innerHTML = ''; // Clear previous results
+
+            if (result.top_students.length === 0) {
+                topStudentsList.innerHTML = '<p>No students found.</p>';
+                return;
+            }
+
+            const ul = document.createElement('ul');
+            result.top_students.forEach(student => {
+                const li = document.createElement('li');
+                li.textContent = `${student.name} (ID: ${student.student_id}, Batch: ${student.batch_year}, Department: ${student.department}, GPA: ${student.gpa}, Achievements: ${student.achievement_count})`;
+                ul.appendChild(li);
+            });
+            topStudentsList.appendChild(ul);
+        });
+    </script>
+</body>
+</html>
